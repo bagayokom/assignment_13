@@ -1,0 +1,209 @@
+import sqlite3
+from sqlite3 import Error
+import sys
+# Mohamed Bagayoko
+# Assignment 13
+# May 1, 2020
+
+#----------------Establishing tbe connection----------------------------------------------------------
+# Method to create the connection to the database.
+def create_connection(path):
+    conn = None
+    try:
+        conn = sqlite3.connect(path)
+        print("Connection to SQLite DB successful")
+    except Error as e:
+        print(f"The error '{e}' occurred")
+
+    return conn
+
+# Create the connection object to the database, "database filename" is the parameter
+print("Connect to SQLite database:")
+connection = create_connection("Assignment13.db")
+
+
+#------------------Query Parameters-------------------------------------------------------------------
+# Execute predefined write queries
+# Send the query as a parameter
+def execute_query(connection, query):
+    cursor = connection.cursor()
+    try:
+        cursor.execute(query)
+        connection.commit()
+        print("Query executed successfully")
+    except Error as e:
+        print(f"The error '{e}' occurred")
+
+
+# Execute predefined read queries
+# Send the query as a parameter
+def execute_read_query(connection, query):
+    cursor = connection.cursor()
+    result = None
+    try:
+        cursor.execute(query)
+        result = cursor.fetchall()
+        return result
+    except Error as e:
+        print(f"The error '{e}' occurred")
+
+
+#------------------------Required Query Contents-----------------------------------------------------------------------
+# String holds the query to create a table
+
+create_customer_table = """
+CREATE TABLE IF NOT EXISTS customer (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  first TEXT NOT NULL,
+  last TEXT NOT NULL,
+  address TEXT NOT NULL,
+  city TEXT NOT NULL,
+  state TEXT NOT NULL,
+  zip TEXT NOT NULL
+);
+"""
+
+create_book_table = """
+CREATE TABLE IF NOT EXISTS book (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL,
+    ISBN TEXT NOT NULL,
+    edition TEXT NOT NULL,
+    price TEXT NOT NULL,
+    publisher TEXT NOT NULL
+);
+"""
+
+#-------------------------Main Menu-----------------------------------------------------------------------------------
+
+print("""Hello user! Please input one of the three options to access the database:
+1) Customers
+2) Books
+3) Exit Program""")
+chose = int(input("> "))
+
+#-----------------------Customer Selection----------------------------------------------------------------------------
+if chose == 1:
+    loop1 = True
+    loop2 = True
+    print("You have selected the (Customer) option")
+    print("""What would you like to do with the Customers?
+1) Add a new Customer
+2) Modify an existing Customer
+3) Print list of all Customers
+4) Delete a Customer
+5) Return to Main Menu""")
+    chose2 = int(input("> "))
+
+    # Adding a Customer
+    if chose2 == 1:
+        execute_query(connection, create_customer_table)
+    #--User Inputs into Customer Query--
+        loop1 = False
+        print("""You selected (Add a new Customer)
+        Please enter the details of this person:""")
+        first_name = input("""What is their first name?
+        > """)
+        last_name = input("""What is their last name?"
+        > """)
+        street_address = input("""What is their street address?"
+        > """)
+        city = input("""What is their city?
+        > """)
+        state = input("""What is their state?
+        > """)
+        zip_code = input("""What is their zip code?
+        > """)
+    #------Insertion into Table---------
+        create_customer = f"""
+        INSERT INTO
+          customer (first, last, address, city, state, zip)
+        VALUES
+          ('{first_name}', '{last_name}', '{street_address}', '{city}', '{state}', '{zip_code}');
+        """
+        execute_query(connection, create_customer)
+        print("Your customer table now consists of:")
+    #--------Executing------------------
+        select_customers = "SELECT * from customer"
+        people = execute_read_query(connection, select_customers)
+        for person in people:
+            print(person)
+        loop1 = False
+
+    # Modifying a Customer
+    elif chose2 == 2:
+        print("""You selected (Modify a Customer)
+Please specify who you want to modify:""")
+
+    elif chose2 == 3:
+        print("You have selected (Print list of all Customers):")
+        select_customers = "SELECT * from customer"
+        people = execute_read_query(connection, select_customers)
+        for person in people:
+            print(person)
+
+    elif chose2 == 4:
+        print("""You have selected (Delete a Customer)
+This is your current list of Customers:""")
+        select_customers = "SELECT * from customer"
+        people = execute_read_query(connection, select_customers)
+        for person in people:
+            print(person)
+        cont = input("(Input anything to continue)")
+        print("Who would you like to delete?")
+        delet = input("> ")
+        delete_customer = """
+        DELETE FROM
+            person
+        WHERE
+            id = 1
+"""
+        new_delet = execute_query(connection, delete_customer)
+        print(f"""Your new list consists of:
+{new_delet}""")
+
+
+
+
+#-----------------------Book Selection----------------------------------------------------------------------------
+elif chose == 2:
+    print("You have selected the (Book) option")
+    execute_query(connection, create_book_table)
+
+    #--User Inputs into Book Query--
+    print("Please enter the details for this book:")
+    title = input("""What is the title of the book?
+    > """)
+    author = input("""Who is the author of the book?"
+    > """)
+    ISBN = input("""What is the ISBN number?"
+    > """)
+    edition = input("""What is the edition of the book?
+    > """)
+    price = input("""What is the price of the book?
+    > """)
+    publisher = input("""Who is the publisher of the book?
+    > """)
+
+#------Insertion into Table---------
+    create_book = f"""
+    INSERT INTO
+      book (title, author, ISBN, edition, price, publisher)
+    VALUES
+      ('{title}', '{author}', '{ISBN}', '{edition}', '{price}', '{publisher}');
+    """
+    execute_query(connection, create_book)
+
+    print("You book table now consists of:")
+
+#--------Executing------------------
+    select_books = "SELECT * from book"
+    books = execute_read_query(connection, select_books)
+    for book in books:
+        print(books)
+
+elif chose == 3:
+    print("You have selected (Exit the program). Have a nice day!")
+    sys.exit()
+
